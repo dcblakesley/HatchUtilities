@@ -8,9 +8,6 @@ namespace HatchUtilities;
 
 public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerOptions serializerOptions)
 {
-    readonly HttpClient _client = client;
-    readonly JsonSerializerOptions _serializerOptions = serializerOptions;
-
     /// <summary> Generate a spreadsheet showing the differences between the IDS CH and the existing Hatch CH </summary>
     public async Task CompareHatchVsIdsCh(string bearerToken)
     {
@@ -18,17 +15,17 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         var columnsIdsCategories = new List<List<string>>();
 
         // Get a list of all Projects from Hatch
-        var getProjectsResponse = await _client.GetFromJsonAsync<GetProjectsResponse>("https://hatch-api.clarkinc.biz/api/Projects/GetProjectsForProjectList", _serializerOptions);
+        var getProjectsResponse = await client.GetFromJsonAsync<GetProjectsResponse>("https://hatch-api.clarkinc.biz/api/Projects/GetProjectsForProjectList", serializerOptions);
 
         // Get a list of all MajorCategoryIds from the projects
         var majorCategoryIdsBeingUsedByHatch = getProjectsResponse!.Projects.Select(x => x.MajorCategoryId).Distinct().OrderBy(x => x).ToList();
 
 
-        var idsChDetailsResponse = await _client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", _serializerOptions);
+        var idsChDetailsResponse = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", serializerOptions);
         var kk = idsChDetailsResponse!.Result;
 
         // Get Hatch Category Hierarchy
-        var hatchCategoryHierarchy = await _client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", _serializerOptions);
+        var hatchCategoryHierarchy = await client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", serializerOptions);
 
         var allHatchMajorCategoryNames = hatchCategoryHierarchy!.MajorCategories.Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
         allHatchMajorCategoryNames.Insert(0, $"All Hatch Major Categories - {allHatchMajorCategoryNames.Count}");
@@ -74,7 +71,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         columnsIdsCategories.Add(hatchUtilizedIdsCategoryCodes);
 
         // All IDS IdsCategoryCodes
-        var getIdsCategoriesResponse = await _client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", _serializerOptions);
+        var getIdsCategoriesResponse = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions);
         var idsCategoriesResults = getIdsCategoriesResponse!.Result!.CategoryHierarchies;
         
         // From IDS
@@ -96,8 +93,8 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
 
     public async Task CreateHatchChFromIdsCh(string bearerToken)
     {
-        var idsGetCategoryDetailsResponse = (await _client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", _serializerOptions))?.Result;
-        var idsGetCategoriesResponse = (await _client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", _serializerOptions))?.Result;
+        var idsGetCategoryDetailsResponse = (await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", serializerOptions))?.Result;
+        var idsGetCategoriesResponse = (await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions))?.Result;
 
 
 

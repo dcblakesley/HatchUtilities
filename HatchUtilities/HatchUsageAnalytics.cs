@@ -8,7 +8,6 @@ namespace HatchUtilities;
 /// <summary> Usage - Download the json export of UsageAnaytics from Mongo, drop that file into the bin folder of this project, and run this method. </summary>
 public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serializerOptions)
 {
-    
     public async Task Run()
     {
         // Get the text of the file
@@ -45,8 +44,9 @@ public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serial
         {
             output += $"{employeeUsage.EmployeeId},{employeeUsage.EmployeeName},{employeeUsage.HatchLoads},{employeeUsage.ProjectLoads}\n";
         }
+
         // Write the output to a file named EmployeeUsage.csv
-        File.WriteAllText("EmployeeUsage.csv", output);
+        File.WriteAllText("Hatch usage since 1 month after go live.csv", output);
 
     }
     public record EmployeeUsage(int EmployeeId, string EmployeeName, int HatchLoads, int ProjectLoads);
