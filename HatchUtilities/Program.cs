@@ -34,14 +34,14 @@ internal class Program
 
 public static class Global
 {
-    static HttpClient? _client { get; set; }
-    static JsonSerializerOptions? _serializerOptions { get; set; }
+    static HttpClient? Client { get; set; }
+    static JsonSerializerOptions? SerializerOptions { get; set; }
 
     public static void Initialize(HttpClient client, JsonSerializerOptions serializerOptions)
     {
-        _client = client;
-        _serializerOptions = serializerOptions;
+        Client = client;
+        SerializerOptions = serializerOptions;
     }
 
-    public static async Task<List<HatchUser>> GetHatchUsers() => await _client.GetFromJsonAsync<List<HatchUser>>("https://hatch-api.clarkinc.biz/api/HatchUsers/GetUsers", _serializerOptions);
+    public static async Task<List<HatchUser>> GetHatchUsers() => await Client.GetFromJsonAsync<List<HatchUser>>("https://hatch-api.clarkinc.biz/api/HatchUsers/GetUsers", SerializerOptions);
 }
