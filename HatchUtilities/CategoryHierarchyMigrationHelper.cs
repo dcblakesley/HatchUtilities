@@ -115,16 +115,3 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
 // => await CategoryHierarchyService.UpdateCategoryHierarchyAsync(cancellationToken);
 
 
-public static class Global
-{
-    static HttpClient? _client { get; set; }
-    static JsonSerializerOptions? _serializerOptions { get; set; }
-
-    public static void Initialize(HttpClient client, JsonSerializerOptions serializerOptions)
-    {
-        _client = client;
-        _serializerOptions = serializerOptions;
-    }
-
-    public static async Task<List<HatchUser>> GetHatchUsers() => await _client.GetFromJsonAsync<List<HatchUser>>("https://hatch-api.clarkinc.biz/api/HatchUsers/GetUsers", _serializerOptions);
-}
