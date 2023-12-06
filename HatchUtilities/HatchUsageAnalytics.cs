@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using Hatch.Core.Features.HatchUsers.Models;
+﻿using System.Text.Json;
 using Hatch.Core.Infrastructure.Analytics;
 
 namespace HatchUtilities;
@@ -20,7 +18,7 @@ public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serial
         // Deserialize the file into a list of UserAnalytics
         var analytics = JsonSerializer.Deserialize<List<UserAnalytics>>(analyticsText, serializerOptions);
 
-        var hatchUsers = await client.GetFromJsonAsync<List<HatchUser>>("https://hatch-api.clarkinc.biz/api/HatchUsers/GetUsers", serializerOptions);
+        var hatchUsers = await Global.GetHatchUsers();
 
         var employeeIds = analytics.Select(x => x.EmployeeId).Distinct().ToList();
 

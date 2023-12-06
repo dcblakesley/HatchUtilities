@@ -17,6 +17,9 @@ internal class Program
         var serializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
 
+        Global.Initialize(client, serializerOptions);
+
+
         var hatchUsageAnalytics = new HatchUsageAnalytics(client, serializerOptions);
         await hatchUsageAnalytics.Run();
 

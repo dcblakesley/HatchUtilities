@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Hatch.Core.Features.CategoryHierarchy.Models;
+using Hatch.Core.Features.HatchUsers.Models;
 using Hatch.Core.Features.Projects.RequestAndResponse;
 
 namespace HatchUtilities;
@@ -9,7 +10,7 @@ namespace HatchUtilities;
 public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerOptions serializerOptions)
 {
     /// <summary> Generate a spreadsheet showing the differences between the IDS CH and the existing Hatch CH </summary>
-    public async Task CompareHatchVsIdsCh(string bearerToken)
+    public async Task CompareHatchVsIdsCh()
     {
         var columnsMajorCategories = new List<List<string>>();
         var columnsIdsCategories = new List<List<string>>();
@@ -91,7 +92,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         builder.Save("CH Comparison.xlsx");
     }
 
-    public async Task CreateHatchChFromIdsCh(string bearerToken)
+    public async Task CreateHatchChFromIdsCh()
     {
         var idsGetCategoryDetailsResponse = (await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", serializerOptions))?.Result;
         var idsGetCategoriesResponse = (await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions))?.Result;
@@ -112,3 +113,18 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
 // 
 // public async Task UpdateCategoryHierarchyAsync(CancellationToken cancellationToken)
 // => await CategoryHierarchyService.UpdateCategoryHierarchyAsync(cancellationToken);
+
+
+public static class Global
+{
+    static HttpClient? _client { get; set; }
+    static JsonSerializerOptions? _serializerOptions { get; set; }
+
+    public static void Initialize(HttpClient client, JsonSerializerOptions serializerOptions)
+    {
+        _client = client;
+        _serializerOptions = serializerOptions;
+    }
+
+    public static async Task<List<HatchUser>> GetHatchUsers() => await _client.GetFromJsonAsync<List<HatchUser>>("https://hatch-api.clarkinc.biz/api/HatchUsers/GetUsers", _serializerOptions);
+}
