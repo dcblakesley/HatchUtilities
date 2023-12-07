@@ -1,14 +1,28 @@
-﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Hatch.Core.Features.CategoryHierarchy.Models;
-using Hatch.Core.Features.HatchUsers.Models;
+using Hatch.Core.Features.CategoryHierarchy.Services;
 using Hatch.Core.Features.Projects.RequestAndResponse;
 
 namespace HatchUtilities;
 
 public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerOptions serializerOptions)
 {
+    public static async Task<NormalizedCategoryHierarchy> GetHierarchyFromIds()
+    {
+        var idsAddress = "https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy";
+
+        var client = new HttpClient();
+        var so = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+
+        var idsHierarchy = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>($"{idsAddress}/get-category-details", so);
+        var idsCategories = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>($"{idsAddress}/get-category-hierarchy", so);
+
+        var ch = idsHierarchy.Result.ToCategoryHierarchy(idsCategories.Result.CategoryHierarchies);
+
+        return ch;
+    }
+
     /// <summary> Generate a spreadsheet showing the differences between the IDS CH and the existing Hatch CH </summary>
     public async Task CompareHatchVsIdsCh()
     {
@@ -33,7 +47,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         columnsMajorCategories.Add(allHatchMajorCategoryNames);
 
         // Get all the Major Category names from Hatch that are being used by Projects
-        var hatchMajorCategoryNames = hatchCategoryHierarchy!.MajorCategories.Where(x=> majorCategoryIdsBeingUsedByHatch.Contains(x.Id)).Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
+        var hatchMajorCategoryNames = hatchCategoryHierarchy!.MajorCategories.Where(x => majorCategoryIdsBeingUsedByHatch.Contains(x.Id)).Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
         hatchMajorCategoryNames.Insert(0, $"Utilized Hatch Major Categories - {hatchMajorCategoryNames.Count}");
         columnsMajorCategories.Add(hatchMajorCategoryNames);
 
@@ -60,7 +74,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
             hatchUtilizedIdsCategoryIds.AddRange(project.IdsCategoryIds);
         }
         hatchUtilizedIdsCategoryIds = hatchUtilizedIdsCategoryIds.Distinct().OrderBy(x => x).ToList();
-        
+
         // All Hatch IdsCategoryCodes
         var allHatchIdsCategoryCodes = hatchCategoryHierarchy.IdsCategories.Select(x => x.Code.Trim()).OrderBy(x => x).ToList();
         allHatchIdsCategoryCodes.Insert(0, $"All Hatch IDS Category Codes - {allHatchIdsCategoryCodes.Count}");
@@ -74,7 +88,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         // All IDS IdsCategoryCodes
         var getIdsCategoriesResponse = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions);
         var idsCategoriesResults = getIdsCategoriesResponse!.Result!.CategoryHierarchies;
-        
+
         // From IDS
         var allIdsCategoryCodesFromIds = idsCategoriesResults!.Select(x => x.ItemCategoryCode.Trim()).OrderBy(x => x).ToList();
         allIdsCategoryCodesFromIds.Insert(0, $"All CategoryCodes in IDS - {allIdsCategoryCodesFromIds.Count}");
@@ -92,26 +106,80 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         builder.Save("CH Comparison.xlsx");
     }
 
-    public async Task CreateHatchChFromIdsCh()
+
+    // DTOs only accessible in this class.
+    record IdsGetCategoryHierarchyResult(List<IdsCategoryDto>? CategoryHierarchies);
+    record IdsGetCategoryHierarchyResponse(IdsGetCategoryHierarchyResult? Result);
+    record IdsGetCategoryDetailsResponse(IdsGetCategoryDetailsResult? Result);
+    record IdsCategoryDto(
+        int ItemCategoryId,
+        string ItemCategoryCode,
+        string ItemCategoryName,
+        int? CommodityId,
+        int? BusinessSegmentId,
+        int? ProductTypeId,
+        int? FamilyId,
+        int? MajorCategoryId,
+        int? SegmentId,
+        int? VicePresidentId,
+        int? DirectorId,
+        int? SeniorCategoryManagerId,
+        int? CategoryManagerId,
+        int? CategoryAnalystId,
+        int CountOfActiveItems,
+        DateTime DateCreated,
+        DateTime DateUpdated) {
+        public IdsCategory ToIdsCategory()
+        {
+            var idsCategory = new IdsCategory
+            {
+                Id = ItemCategoryId,
+                Code = ItemCategoryCode,
+                Name = ItemCategoryName,
+
+                BusinessSegmentId = BusinessSegmentId ?? 0,
+                ProductTypeId = ProductTypeId ?? 0,
+                FamilyId = FamilyId ?? 0,
+                MajorCategoryId = MajorCategoryId ?? 0,
+                SegmentId = SegmentId ?? 0,
+                CommodityId = CommodityId ?? 0,
+
+                VicePresidentId = VicePresidentId ?? 0,
+                DirectorId = DirectorId ?? 0,
+                SeniorCategoryManagerId = SeniorCategoryManagerId,
+                CategoryManagerId = CategoryManagerId ?? 0,
+                CategoryAnalystId = CategoryAnalystId ?? 0,
+
+                Updated = DateUpdated
+            };
+
+            return idsCategory;
+        }
+    }
+    record IdsGetCategoryDetailsResult(
+        List<IdsDivisionDto>? BusinessSegments,
+        List<IdsDivisionDto>? Commodities,
+        List<IdsDivisionDto>? Families,
+        List<IdsDivisionDto>? MajorCategories,
+        List<IdsDivisionDto>? ProductTypes,
+        List<IdsDivisionDto>? Segments) {
+        public NormalizedCategoryHierarchy ToCategoryHierarchy(List<IdsCategoryDto> idsCategoryDtos)
+            => new()
+            {
+                BusinessSegments = ConvertIdsToHatchDivisions(BusinessSegments),
+                Commodities = ConvertIdsToHatchDivisions(Commodities),
+                Families = ConvertIdsToHatchDivisions(Families),
+                MajorCategories = ConvertIdsToHatchDivisions(MajorCategories),
+                ProductTypes = ConvertIdsToHatchDivisions(ProductTypes),
+                Segments = ConvertIdsToHatchDivisions(Segments),
+                IdsCategories = ConvertIdsToHatchCategories(idsCategoryDtos)
+            };
+
+        List<Division> ConvertIdsToHatchDivisions(List<IdsDivisionDto>? idsDivs) => idsDivs == null ? new() : idsDivs.Select(x => x.ToDivision()).ToList();
+        List<IdsCategory> ConvertIdsToHatchCategories(List<IdsCategoryDto> dtos) => dtos.Select(x => x.ToIdsCategory()).ToList();
+    }
+    record IdsDivisionDto(int CategoryId, string CategoryName, DateTime DateUpdated)
     {
-        var idsGetCategoryDetailsResponse = (await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", serializerOptions))?.Result;
-        var idsGetCategoriesResponse = (await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions))?.Result;
-
-
-
-        //var nch = new NormalizedCategoryHierarchy();
-
-        // Get Hatch Category Hierarchy
-        //var hatchCategoryHierarchy = await client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", serializerOptions);
-
-        //var ch = new NormalizedCategoryHierarchy();
-
-
+        public Division ToDivision() => new(CategoryId, CategoryName, DateUpdated);
     }
 }
-
-// 
-// public async Task UpdateCategoryHierarchyAsync(CancellationToken cancellationToken)
-// => await CategoryHierarchyService.UpdateCategoryHierarchyAsync(cancellationToken);
-
-

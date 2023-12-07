@@ -1,47 +1,54 @@
-﻿using Hatch.Core.Features.HatchUsers.Models;
+﻿using Hatch.Core.Features.CategoryHierarchy.Models;
+using Hatch.Core.Features.HatchUsers.Models;
+using Hatch.Core.Features.Projects.RequestAndResponse;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace HatchUtilities;
+#pragma warning disable CS8603 // Possible null reference return.
 
 internal class Program
 {
     static async Task Main(string[] args)
     {
-        //Console.WriteLine("Hello, World!");
+        var hatchAddress = "https://hatch-api.dev.clarkinc.biz/api";
+        var idsApi = "https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy";
 
         // copy(window.bearerToken);
-        var bearerToken =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkRhdmlkIEJsYWtlc2xleSIsIndpbmFjY291bnRuYW1lIjoiZGJsYWtlc2xleSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvdXNlcmRhdGEiOiJodHRwczovL2Fzc2V0cy53ZWJzdGF1cmFudHN0b3JlLmNvbS9lbXAvODYvNWIvODY1YjM1OWU0NzQwNGMwM2I3YzRjNjI3YmNjMmNjY2MuanBnIiwiZW1haWwiOiJkYmxha2VzbGV5QHdlYnN0YXVyYW50c3RvcmUuY29tIiwibmFtZWlkIjoiMjI3NzciLCJmaXJzdE5hbWUiOiJEYXZpZCIsImxhc3ROYW1lIjoiQmxha2VzbGV5IiwiaGF0Y2hVc2VySWQiOiIzMTkiLCJyb2xlIjpbIjM2NS1MaWMtRTUiLCJDbGFya19HUFBfMTJfTGVuZ3RoIiwiQW55Q29ubmVjdF9EZXZlbG9wZXIiLCJXU1MiLCJXU1Nfc2VjIiwiTWltZWNhc3QtQ3liZXJHcmFwaC1QaWxvdCIsImlMYW5kLUJhY2t1cC1PRC1BLUciLCJpTGFuZC1CYWNrdXAtRXgtQWxsIiwiaUxhbmQtQmFja3VwLU9ELUFsbCIsImlMYW5kLUJhY2t1cC1FeC1BLUciLCJNaW1lY2FzdC1UcmFpbmluZyIsIk1pbWVjYXN0LVN5bmMtUmVjb3ZlciIsIldTUyBEZXZlbG9wZXJzIiwiTGFuY2FzdGVyIERldmVsb3BtZW50IiwiRGV2X1dpcmVsZXNzIiwiSWRsZSBTZXNzaW9uIExvZ291dCIsIk1haWxyb29tVXNlciIsIk1haWxyb29tQWRtaW4iLCJMaXRpdHogQnVpbGRpbmciLCJXZWJEZXYiLCJEZXZlbG9wZXJzIiwiV2ViRGV2ZWxvcGVycyIsIldlYlN0b3JlIl0sIm5iZiI6MTcwMTgwODgyOCwiZXhwIjoxNzAxODk1MjI4LCJpYXQiOjE3MDE4MDg4Mjh9.7iOY6kn3JIyqDaECJZYBRwth1TEsGyauS1upZF-WAhc";
+        var bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkRhdmlkIEJsYWtlc2xleSIsIndpbmFjY291bnRuYW1lIjoiZGJsYWtlc2xleSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvdXNlcmRhdGEiOiIiLCJlbWFpbCI6ImRibGFrZXNsZXlAd2Vic3RhdXJhbnRzdG9yZS5jb20iLCJuYW1laWQiOiIyMjc3NyIsImZpcnN0TmFtZSI6IkRhdmlkIiwibGFzdE5hbWUiOiJCbGFrZXNsZXkiLCJoYXRjaFVzZXJJZCI6IjE1NCIsInJvbGUiOlsiMzY1LUxpYy1FNSIsIkNsYXJrX0dQUF8xMl9MZW5ndGgiLCJBbnlDb25uZWN0X0RldmVsb3BlciIsIldTUyIsIldTU19zZWMiLCJNaW1lY2FzdC1DeWJlckdyYXBoLVBpbG90IiwiaUxhbmQtQmFja3VwLU9ELUEtRyIsImlMYW5kLUJhY2t1cC1FeC1BbGwiLCJpTGFuZC1CYWNrdXAtT0QtQWxsIiwiaUxhbmQtQmFja3VwLUV4LUEtRyIsIk1pbWVjYXN0LVRyYWluaW5nIiwiTWltZWNhc3QtU3luYy1SZWNvdmVyIiwiV1NTIERldmVsb3BlcnMiLCJMYW5jYXN0ZXIgRGV2ZWxvcG1lbnQiLCJEZXZfV2lyZWxlc3MiLCJJZGxlIFNlc3Npb24gTG9nb3V0IiwiTWFpbHJvb21Vc2VyIiwiTWFpbHJvb21BZG1pbiIsIkxpdGl0eiBCdWlsZGluZyIsIldlYkRldiIsIkRldmVsb3BlcnMiLCJXZWJEZXZlbG9wZXJzIiwiV2ViU3RvcmUiXSwibmJmIjoxNzAxOTY0MjcwLCJleHAiOjE3MDIwNTA2NzAsImlhdCI6MTcwMTk2NDI3MH0.x5vWrfknJpur5WOHheKlo2jLLWh78w1vWvhUHi8OiOY";
         
         var client = new HttpClient();
-        var serializerOptions = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
-
-        Global.Initialize(client, serializerOptions);
+        var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        client.DefaultRequestHeaders.Authorization = new("Bearer", bearerToken);
 
 
-        var hatchUsageAnalytics = new HatchUsageAnalytics(client, serializerOptions);
-        await hatchUsageAnalytics.Run();
-
-        //var chHelper = new CategoryHierarchyMigrationHelper(client, serializerOptions);
-        //await chHelper.CompareHatchVsIdsCh(bearerToken);
-
-
+        var chHelper = new CategoryHierarchyMigrationHelper(client, serializerOptions);
+        var ch = await CategoryHierarchyMigrationHelper.GetHierarchyFromIds();
     }
 }
 
-public static class Global
+
+public static class HatchApi
 {
-    static HttpClient? Client { get; set; }
-    static JsonSerializerOptions? SerializerOptions { get; set; }
+    static HttpClient _client;
+    static JsonSerializerOptions? _so;
+    static string _address;
 
-    public static void Initialize(HttpClient client, JsonSerializerOptions serializerOptions)
+    public static void Initialize(HttpClient client, JsonSerializerOptions serializerOptions, string address)
     {
-        Client = client;
-        SerializerOptions = serializerOptions;
+        _client = client;
+        _so = serializerOptions;
+        _address = address;
     }
 
-    public static async Task<List<HatchUser>> GetHatchUsers() => await Client.GetFromJsonAsync<List<HatchUser>>("https://hatch-api.clarkinc.biz/api/HatchUsers/GetUsers", SerializerOptions);
+    public static async Task<List<HatchUser>> GetUsers()
+        => await _client.GetFromJsonAsync<List<HatchUser>>($"{_address}/HatchUsers/GetUsers", _so);
+
+    public static async Task<NormalizedCategoryHierarchy> GetHatchCh()
+        => await _client.GetFromJsonAsync<NormalizedCategoryHierarchy>($"{_address}/CategoryHierarchy/GetNormalizedCategoryHierarchy", _so);
+
+    public static async Task<GetProjectsResponse> GetProjects()
+        => await _client.GetFromJsonAsync<GetProjectsResponse>($"{_address}/Projects/GetProjectsForProjectList", _so);
 }
+

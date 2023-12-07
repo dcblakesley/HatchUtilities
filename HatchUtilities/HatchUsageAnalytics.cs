@@ -18,7 +18,7 @@ public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serial
         // Deserialize the file into a list of UserAnalytics
         var analytics = JsonSerializer.Deserialize<List<UserAnalytics>>(analyticsText, serializerOptions);
 
-        var hatchUsers = await Global.GetHatchUsers();
+        var hatchUsers = await HatchApi.GetUsers();
 
         var employeeIds = analytics.Select(x => x.EmployeeId).Distinct().ToList();
 
