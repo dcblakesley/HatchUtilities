@@ -10,7 +10,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
 {
     public static async Task<NormalizedCategoryHierarchy> GetHierarchyFromIds()
     {
-        var idsAddress = "https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy";
+        var idsAddress = "https://idspurchasingapi.clarkinc.biz/categoryhierarchy";
 
         var client = new HttpClient();
         var so = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
@@ -30,7 +30,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         var columnsIdsCategories = new List<List<string>>();
 
         // Get a list of all Projects from Hatch
-        var getProjectsResponse = await client.GetFromJsonAsync<GetProjectsResponse>("https://hatch-api.clarkinc.biz/api/Projects/GetProjectsForProjectList", serializerOptions);
+        var getProjectsResponse = await HatchApi.GetProjects();
 
         // Get a list of all MajorCategoryIds from the projects
         var majorCategoryIdsBeingUsedByHatch = getProjectsResponse!.Projects.Select(x => x.MajorCategoryId).Distinct().OrderBy(x => x).ToList();
@@ -106,6 +106,16 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
         builder.Save("CH Comparison.xlsx");
     }
 
+    public async Task UpdateProjectsWithNewIds()
+    {
+        // Get all projects
+        var allProjects = await HatchApi.GetProjects();
+
+        // 
+
+
+    }
+
 
     // DTOs only accessible in this class.
     record IdsGetCategoryHierarchyResult(List<IdsCategoryDto>? CategoryHierarchies);
@@ -174,6 +184,7 @@ public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerO
                 Segments = ConvertIdsToHatchDivisions(Segments),
                 IdsCategories = ConvertIdsToHatchCategories(idsCategoryDtos)
             };
+
 
         List<Division> ConvertIdsToHatchDivisions(List<IdsDivisionDto>? idsDivs) => idsDivs == null ? new() : idsDivs.Select(x => x.ToDivision()).ToList();
         List<IdsCategory> ConvertIdsToHatchCategories(List<IdsCategoryDto> dtos) => dtos.Select(x => x.ToIdsCategory()).ToList();

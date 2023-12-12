@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <Reference Include="Hatch.Core">
-      <HintPath>..\..\Hatch\bin\Debug\Hatch.Core.dll</HintPath>
+      <HintPath>..\..\Hatch\src\Hatch.Core\bin\Debug\net6.0\Hatch.Core.dll</HintPath>
     </Reference>
     <Reference Include="Hatch.Web">
       <HintPath>..\..\Hatch\bin\Debug\Hatch.Web.dll</HintPath>
