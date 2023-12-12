@@ -28,8 +28,8 @@ internal class Program
         //var analytics = new HatchUsageAnalytics(client, serializerOptions);
         //await analytics.Run();
 
-        var chHelper = new CategoryHierarchyMigrationHelper(client, serializerOptions);
-        var chFromIds = await CategoryHierarchyMigrationHelper.GetHierarchyFromIds();
+        var chHelper = new CategoryHierarchyConversionHelper(client, serializerOptions);
+        var chFromIds = await CategoryHierarchyConversionHelper.GetHierarchyFromIds();
 
     }
 }
