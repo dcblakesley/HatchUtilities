@@ -6,7 +6,7 @@ using Hatch.Core.Features.Projects.RequestAndResponse;
 
 namespace HatchUtilities;
 
-public class CategoryHierarchyMigrationHelper(HttpClient client, JsonSerializerOptions serializerOptions)
+public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializerOptions serializerOptions)
 {
     public static async Task<NormalizedCategoryHierarchy> GetHierarchyFromIds()
     {
