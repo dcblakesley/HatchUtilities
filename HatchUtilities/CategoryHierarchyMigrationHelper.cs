@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Hatch.Core.Features.CategoryHierarchy.Models;
 using Hatch.Core.Features.CategoryHierarchy.Services;
+using Hatch.Core.Features.Projects.Models;
 using Hatch.Core.Features.Projects.RequestAndResponse;
 
 namespace HatchUtilities;
@@ -10,6 +11,9 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 {
     public static async Task<NormalizedCategoryHierarchy> GetHierarchyFromIds()
     {
+        // Category Hierarchy (IDS Categories): https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy
+        // Category Details: https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details
+
         var idsAddress = "https://idspurchasingapi.clarkinc.biz/categoryhierarchy";
 
         var client = new HttpClient();
@@ -35,8 +39,8 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         // Get a list of all MajorCategoryIds from the projects
         var majorCategoryIdsBeingUsedByHatch = getProjectsResponse!.Projects.Select(x => x.MajorCategoryId).Distinct().OrderBy(x => x).ToList();
 
-
-        var idsChDetailsResponse = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details", serializerOptions);
+        // Get 
+        var idsChDetailsResponse = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("", serializerOptions);
         var kk = idsChDetailsResponse!.Result;
 
         // Get Hatch Category Hierarchy
@@ -106,14 +110,126 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         builder.Save("CH Comparison.xlsx");
     }
 
-    public async Task UpdateProjectsWithNewIds()
+    public async Task GetDataForConversion()
     {
-        // Get all projects
+        // All Projects
         var allProjects = await HatchApi.GetProjects();
 
-        // 
+        // Hatch Category Hierarchy
+        var hatchCategoryHierarchy = await HatchApi.GetHatchCh();
+
+        // IDS Category Hierarchy
+        var idsCategoryHierarchy = await GetHierarchyFromIds();
+
+        // Create a folder for the data files
+        var dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Hatch Data");
+        if (!Directory.Exists(dataFolder))
+            Directory.CreateDirectory(dataFolder);
+        
+        // Create a file for the Hatch Category Hierarchy
+        File.WriteAllText(Path.Combine(dataFolder, "Hatch Category Hierarchy.json"), JsonSerializer.Serialize(hatchCategoryHierarchy));
+
+        // Create a file for the IDS Category Hierarchy
+        File.WriteAllText(Path.Combine(dataFolder, "IDS Category Hierarchy.json"), JsonSerializer.Serialize(idsCategoryHierarchy));
+
+        // Create a subfolder for projects
+        var projectsFolder = Path.Combine(dataFolder, "Projects");
+        if (!Directory.Exists(projectsFolder))
+            Directory.CreateDirectory(projectsFolder);
+        
+        // Create files for each project
+        foreach (var project in allProjects.Projects)
+            File.WriteAllText(Path.Combine(projectsFolder, $"{project.ProjectId}.json"), JsonSerializer.Serialize(project));
+        
+    }
+
+    public async Task PerformCategoryIdReplacements()
+    {
+        // Get the Data files
+        var dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Hatch Data");
+        var projectsFolder = Path.Combine(dataFolder, "Projects");
+        var idsCategoryHierarchy = JsonSerializer.Deserialize<NormalizedCategoryHierarchy>(File.ReadAllText(Path.Combine(dataFolder, "IDS Category Hierarchy.json")));
+        var hatchCategoryHierarchy = JsonSerializer.Deserialize<NormalizedCategoryHierarchy>(File.ReadAllText(Path.Combine(dataFolder, "Hatch Category Hierarchy.json")));
+
+        // Major Category Replacements
+        var replacementsFile = File.ReadAllText(Path.Combine(dataFolder, "Major Category Replacements.txt"));
+        var replacementLines = replacementsFile.Split(Environment.NewLine).ToList();
+        var replacements = 
+            replacementLines.Select(replacementLine => replacementLine.Split(","))
+                .ToDictionary(parts => parts[0], parts => parts[1]);
+
+        // IDS Category Replacements
+        var idsCategoryReplacementsFile = File.ReadAllText(Path.Combine(dataFolder, "IDS Category Replacements.txt"));
+        var idsCategoryReplacementLines = idsCategoryReplacementsFile.Split(Environment.NewLine).ToList();
+        var idsCategoryReplacements = 
+            idsCategoryReplacementLines.Select(replacementLine => replacementLine.Split(","))
+                .ToDictionary(parts => parts[0], parts => parts[1]);
+
+        // Get all files in the projects folder
+        var projectFiles = Directory.GetFiles(projectsFolder);
+
+        // Create a folder to drop completed files
+        var completedFolder = Path.Combine(dataFolder, "Completed");
+        if (!Directory.Exists(completedFolder))
+            Directory.CreateDirectory(completedFolder);
+        
+        // Loop through each project file
+        foreach (var projectFile in projectFiles)
+        {
+            try
+            {
+                var project = JsonSerializer.Deserialize<Project>(File.ReadAllText(projectFile));
+
+                // Major Category
+                var majorCategoryId = project.MajorCategoryId;
+                var majorCategoryName = hatchCategoryHierarchy.MajorCategories.First(x => x.Id == majorCategoryId).Name;
+
+                // Check if the Major Category is in the replacements list
+                if (replacements.TryGetValue(majorCategoryName, out var replacement))
+                    majorCategoryName = replacement;
+                
+                // Get the matching name from the Ids Category Hierarchy
+                var idsMajorCategory = idsCategoryHierarchy.MajorCategories.FirstOrDefault(x => x.Name.Trim().ToLower() == majorCategoryName.Trim().ToLower());
+                if (idsMajorCategory == null)
+                {
+                    Console.WriteLine($"Major Category not found: {majorCategoryName}");
+                    continue;
+                }
+                
+                // Set the new Major Category Id
+                project.MajorCategoryId = idsMajorCategory.Id;
+
+                // IDS Categories
+                var idsCategoryIds = project.IdsCategoryIds;
+
+                // Check if the IDS Categories are in the replacements list
+                var newIdsCategoryIds = new List<int>();
+                foreach (var idsCategoryId in idsCategoryIds)
+                {
+                    var idsCategoryCode = hatchCategoryHierarchy.IdsCategories.First(x => x.Id == idsCategoryId).Code;
+
+                    if (idsCategoryReplacements.TryGetValue(idsCategoryCode, out var replacementCode))
+                        idsCategoryCode = replacementCode;
+
+                    var idsCategory = idsCategoryHierarchy.IdsCategories.FirstOrDefault(x => x.Code.Trim().ToLower() == idsCategoryCode.Trim().ToLower());
+                    if (idsCategory == null)
+                    {
+                        Console.WriteLine($"IDS Category not found: {idsCategoryCode}");
+                        continue;
+                    }
+
+                    newIdsCategoryIds.Add(idsCategory.Id);
+                }
 
 
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+        }
     }
 
 
