@@ -22,6 +22,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         var idsHierarchy = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>($"{idsAddress}/get-category-details", so);
         Console.WriteLine($"{idsAddress}/get-category-hierarchy");
         var idsCategories = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>($"{idsAddress}/get-category-hierarchy", so);
+        Console.WriteLine($"ids downloads complete");
 
         var ch = idsHierarchy.Result.ToCategoryHierarchy(idsCategories.Result.CategoryHierarchies);
 
@@ -112,6 +113,10 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 
     public async Task GetDataForConversion()
     {
+        // IDS Category Hierarchy
+        Console.WriteLine("Getting IDS Category Hierarchy...");
+        var idsCategoryHierarchy = await GetHierarchyFromIds();
+
         // All Projects
         Console.WriteLine("Getting all projects...");
         var allProjects = await HatchApi.GetProjects();
@@ -120,9 +125,6 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         Console.WriteLine("Getting Hatch Category Hierarchy...");
         var hatchCategoryHierarchy = await HatchApi.GetHatchCh();
 
-        // IDS Category Hierarchy
-        Console.WriteLine("Getting IDS Category Hierarchy...");
-        var idsCategoryHierarchy = await GetHierarchyFromIds();
 
         // Create a folder for the data files
         var dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Hatch Data");
