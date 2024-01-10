@@ -11,15 +11,16 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 {
     public static async Task<NormalizedCategoryHierarchy> GetHierarchyFromIds()
     {
-        // Category Hierarchy (IDS Categories): https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy
-        // Category Details: https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details
+        // Category Hierarchy (IDS Categories): https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-hierarchy
+        // Category Details: https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-details
 
-        var idsAddress = "https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy";
+        var idsAddress = "https://idspurchasingapi.clarkinc.biz/categoryhierarchy";
 
         var client = new HttpClient();
         var so = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-        
+        Console.WriteLine($"{idsAddress}/get-category-details");
         var idsHierarchy = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>($"{idsAddress}/get-category-details", so);
+        Console.WriteLine($"{idsAddress}/get-category-hierarchy");
         var idsCategories = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>($"{idsAddress}/get-category-hierarchy", so);
 
         var ch = idsHierarchy.Result.ToCategoryHierarchy(idsCategories.Result.CategoryHierarchies);
@@ -43,7 +44,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         var idsCh = await GetHierarchyFromIds();
 
         // Get Hatch Category Hierarchy
-        var hatchCh = await client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.dev.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", serializerOptions);
+        var hatchCh = await client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", serializerOptions);
 
         var allHatchMajorCategoryNames = hatchCh!.MajorCategories.Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
         allHatchMajorCategoryNames.Insert(0, $"All Hatch Major Categories - {allHatchMajorCategoryNames.Count}");
@@ -89,7 +90,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         columnsIdsCategories.Add(hatchUtilizedIdsCategoryCodes);
 
         // All IDS IdsCategoryCodes
-        var getIdsCategoriesResponse = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions);
+        var getIdsCategoriesResponse = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>("https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-hierarchy", serializerOptions);
         var idsCategoriesResults = getIdsCategoriesResponse!.Result!.CategoryHierarchies;
 
         // From IDS
@@ -112,12 +113,15 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
     public async Task GetDataForConversion()
     {
         // All Projects
+        Console.WriteLine("Getting all projects...");
         var allProjects = await HatchApi.GetProjects();
 
         // Hatch Category Hierarchy
+        Console.WriteLine("Getting Hatch Category Hierarchy...");
         var hatchCategoryHierarchy = await HatchApi.GetHatchCh();
 
         // IDS Category Hierarchy
+        Console.WriteLine("Getting IDS Category Hierarchy...");
         var idsCategoryHierarchy = await GetHierarchyFromIds();
 
         // Create a folder for the data files
