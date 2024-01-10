@@ -14,11 +14,11 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         // Category Hierarchy (IDS Categories): https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-hierarchy
         // Category Details: https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy/get-category-details
 
-        var idsAddress = "https://idspurchasingapi.clarkinc.biz/categoryhierarchy";
+        var idsAddress = "https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy";
 
         var client = new HttpClient();
         var so = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
-
+        
         var idsHierarchy = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>($"{idsAddress}/get-category-details", so);
         var idsCategories = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>($"{idsAddress}/get-category-hierarchy", so);
 
@@ -40,23 +40,22 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         var majorCategoryIdsBeingUsedByHatch = getProjectsResponse!.Projects.Select(x => x.MajorCategoryId).Distinct().OrderBy(x => x).ToList();
 
         // Get 
-        var idsChDetailsResponse = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>("", serializerOptions);
-        var kk = idsChDetailsResponse!.Result;
+        var idsCh = await GetHierarchyFromIds();
 
         // Get Hatch Category Hierarchy
-        var hatchCategoryHierarchy = await client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", serializerOptions);
+        var hatchCh = await client.GetFromJsonAsync<NormalizedCategoryHierarchy>("https://hatch-api.dev.clarkinc.biz/api/CategoryHierarchy/GetNormalizedCategoryHierarchy?useClauthEmployeeId=true", serializerOptions);
 
-        var allHatchMajorCategoryNames = hatchCategoryHierarchy!.MajorCategories.Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
+        var allHatchMajorCategoryNames = hatchCh!.MajorCategories.Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
         allHatchMajorCategoryNames.Insert(0, $"All Hatch Major Categories - {allHatchMajorCategoryNames.Count}");
         columnsMajorCategories.Add(allHatchMajorCategoryNames);
 
         // Get all the Major Category names from Hatch that are being used by Projects
-        var hatchMajorCategoryNames = hatchCategoryHierarchy!.MajorCategories.Where(x => majorCategoryIdsBeingUsedByHatch.Contains(x.Id)).Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
+        var hatchMajorCategoryNames = hatchCh!.MajorCategories.Where(x => majorCategoryIdsBeingUsedByHatch.Contains(x.Id)).Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
         hatchMajorCategoryNames.Insert(0, $"Utilized Hatch Major Categories - {hatchMajorCategoryNames.Count}");
         columnsMajorCategories.Add(hatchMajorCategoryNames);
 
         // Get all the Major Category names from IDS
-        var idsMajorCategoryNames = idsChDetailsResponse.Result!.MajorCategories!.Select(x => x.CategoryName.Trim()).OrderBy(x => x).ToList();
+        var idsMajorCategoryNames = idsCh.MajorCategories.Select(x => x.Name.Trim()).OrderBy(x => x).ToList();
         idsMajorCategoryNames.Insert(0, $"All IDS Major Categories - {idsMajorCategoryNames.Count}");
         columnsMajorCategories.Add(idsMajorCategoryNames);
 
@@ -80,12 +79,12 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         hatchUtilizedIdsCategoryIds = hatchUtilizedIdsCategoryIds.Distinct().OrderBy(x => x).ToList();
 
         // All Hatch IdsCategoryCodes
-        var allHatchIdsCategoryCodes = hatchCategoryHierarchy.IdsCategories.Select(x => x.Code.Trim()).OrderBy(x => x).ToList();
+        var allHatchIdsCategoryCodes = hatchCh.IdsCategories.Select(x => x.Code.Trim()).OrderBy(x => x).ToList();
         allHatchIdsCategoryCodes.Insert(0, $"All Hatch IDS Category Codes - {allHatchIdsCategoryCodes.Count}");
         columnsIdsCategories.Add(allHatchIdsCategoryCodes);
 
         // Utilized Hatch IdsCategoryCodes
-        var hatchUtilizedIdsCategoryCodes = hatchCategoryHierarchy.IdsCategories.Where(x => hatchUtilizedIdsCategoryIds.Contains(x.Id)).Select(x => x.Code.Trim()).OrderBy(x => x).ToList();
+        var hatchUtilizedIdsCategoryCodes = hatchCh.IdsCategories.Where(x => hatchUtilizedIdsCategoryIds.Contains(x.Id)).Select(x => x.Code.Trim()).OrderBy(x => x).ToList();
         hatchUtilizedIdsCategoryCodes.Insert(0, $"Utilized Hatch IDS Category Codes - {hatchUtilizedIdsCategoryCodes.Count}");
         columnsIdsCategories.Add(hatchUtilizedIdsCategoryCodes);
 
@@ -131,12 +130,17 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 
         // Create a file for the IDS Category Hierarchy
         File.WriteAllText(Path.Combine(dataFolder, "IDS Category Hierarchy.json"), JsonSerializer.Serialize(idsCategoryHierarchy));
-
+        
         // Create a subfolder for projects
         var projectsFolder = Path.Combine(dataFolder, "Projects");
         if (!Directory.Exists(projectsFolder))
             Directory.CreateDirectory(projectsFolder);
         
+        // Remove any files in the subfolder
+        var projectFiles = Directory.GetFiles(projectsFolder);
+        foreach (var projectFile in projectFiles)
+            File.Delete(projectFile);
+
         // Create files for each project
         foreach (var project in allProjects.Projects)
             File.WriteAllText(Path.Combine(projectsFolder, $"{project.ProjectId}.json"), JsonSerializer.Serialize(project));
@@ -182,8 +186,14 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 
                 // Major Category
                 var majorCategoryId = project.MajorCategoryId;
-                var majorCategoryName = hatchCategoryHierarchy.MajorCategories.First(x => x.Id == majorCategoryId).Name;
-
+                var allIds = hatchCategoryHierarchy.MajorCategories.Select(x => x.Id).OrderBy(x=>x).ToList();
+                var majorCategory = hatchCategoryHierarchy.MajorCategories.FirstOrDefault(x => x.Id == majorCategoryId);
+                if (majorCategory == null)
+                {
+                    Console.WriteLine($"Major Category not found: {majorCategoryId}");
+                    continue;
+                }
+                var majorCategoryName = majorCategory.Name;
                 // Check if the Major Category is in the replacements list
                 if (replacements.TryGetValue(majorCategoryName, out var replacement))
                     majorCategoryName = replacement;
@@ -192,7 +202,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
                 var idsMajorCategory = idsCategoryHierarchy.MajorCategories.FirstOrDefault(x => x.Name.Trim().ToLower() == majorCategoryName.Trim().ToLower());
                 if (idsMajorCategory == null)
                 {
-                    Console.WriteLine($"Major Category not found: {majorCategoryName}");
+                    Console.WriteLine($"Matching Major Category not found: {majorCategoryName}");
                     continue;
                 }
                 
@@ -215,14 +225,19 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
                     if (idsCategory == null)
                     {
                         Console.WriteLine($"IDS Category not found: {idsCategoryCode}");
-                        continue;
+                        break;
                     }
 
                     newIdsCategoryIds.Add(idsCategory.Id);
                 }
 
+                // Upsert the project
+                //var response = await HatchApi.UpsertProject(project);
+                //response.EnsureSuccessStatusCode();
 
-
+                // Move the project file to the completed folder
+                var fileName = Path.GetFileName(projectFile);
+                File.Move(projectFile, Path.Combine(completedFolder, fileName));
             }
             catch (Exception ex)
             {

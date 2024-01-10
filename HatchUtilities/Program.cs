@@ -4,6 +4,7 @@ using Hatch.Core.Features.Projects.RequestAndResponse;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Hatch.Core.Features.Projects.Models;
 
 namespace HatchUtilities;
 #pragma warning disable CS8603 // Possible null reference return.
@@ -17,7 +18,7 @@ internal class Program
         var idsApi = "https://idspurchasingapi.dev.clarkinc.biz/categoryhierarchy";
 
         // copy(window.bearerToken);
-        var bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkRhdmlkIEJsYWtlc2xleSIsIndpbmFjY291bnRuYW1lIjoiZGJsYWtlc2xleSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvdXNlcmRhdGEiOiIiLCJlbWFpbCI6ImRibGFrZXNsZXlAd2Vic3RhdXJhbnRzdG9yZS5jb20iLCJuYW1laWQiOiIyMjc3NyIsImZpcnN0TmFtZSI6IkRhdmlkIiwibGFzdE5hbWUiOiJCbGFrZXNsZXkiLCJoYXRjaFVzZXJJZCI6IjE1NCIsInJvbGUiOlsiMzY1LUxpYy1FNSIsIkNsYXJrX0dQUF8xMl9MZW5ndGgiLCJBbnlDb25uZWN0X0RldmVsb3BlciIsIldTUyIsIldTU19zZWMiLCJNaW1lY2FzdC1DeWJlckdyYXBoLVBpbG90IiwiaUxhbmQtQmFja3VwLU9ELUEtRyIsImlMYW5kLUJhY2t1cC1FeC1BbGwiLCJpTGFuZC1CYWNrdXAtT0QtQWxsIiwiaUxhbmQtQmFja3VwLUV4LUEtRyIsIk1pbWVjYXN0LVRyYWluaW5nIiwiTWltZWNhc3QtU3luYy1SZWNvdmVyIiwiV1NTIERldmVsb3BlcnMiLCJMYW5jYXN0ZXIgRGV2ZWxvcG1lbnQiLCJEZXZfV2lyZWxlc3MiLCJJZGxlIFNlc3Npb24gTG9nb3V0IiwiTWFpbHJvb21Vc2VyIiwiTWFpbHJvb21BZG1pbiIsIkxpdGl0eiBCdWlsZGluZyIsIldlYkRldiIsIkRldmVsb3BlcnMiLCJXZWJEZXZlbG9wZXJzIiwiV2ViU3RvcmUiXSwibmJmIjoxNzA0MzE5OTMzLCJleHAiOjE3MDQ0MDYzMzMsImlhdCI6MTcwNDMxOTkzM30.ef2xL7gVj8aO-uGBqJHUDwsVBZOm7e66drBQFABTwII";
+        var bearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6IkRhdmlkIEJsYWtlc2xleSIsIndpbmFjY291bnRuYW1lIjoiZGJsYWtlc2xleSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvdXNlcmRhdGEiOiIiLCJlbWFpbCI6ImRibGFrZXNsZXlAd2Vic3RhdXJhbnRzdG9yZS5jb20iLCJuYW1laWQiOiIyMjc3NyIsImZpcnN0TmFtZSI6IkRhdmlkIiwibGFzdE5hbWUiOiJCbGFrZXNsZXkiLCJoYXRjaFVzZXJJZCI6IjE1NCIsInJvbGUiOlsiMzY1LUxpYy1FNSIsIkNsYXJrX0dQUF8xMl9MZW5ndGgiLCJBbnlDb25uZWN0X0RldmVsb3BlciIsIldTUyIsIldTU19zZWMiLCJNaW1lY2FzdC1DeWJlckdyYXBoLVBpbG90IiwiaUxhbmQtQmFja3VwLU9ELUEtRyIsImlMYW5kLUJhY2t1cC1FeC1BbGwiLCJpTGFuZC1CYWNrdXAtT0QtQWxsIiwiaUxhbmQtQmFja3VwLUV4LUEtRyIsIk1pbWVjYXN0LVRyYWluaW5nIiwiTWltZWNhc3QtU3luYy1SZWNvdmVyIiwiV1NTIERldmVsb3BlcnMiLCJMYW5jYXN0ZXIgRGV2ZWxvcG1lbnQiLCJEZXZfV2lyZWxlc3MiLCJJZGxlIFNlc3Npb24gTG9nb3V0IiwiTWFpbHJvb21Vc2VyIiwiTWFpbHJvb21BZG1pbiIsIkxpdGl0eiBCdWlsZGluZyIsIldlYkRldiIsIkRldmVsb3BlcnMiLCJXZWJEZXZlbG9wZXJzIiwiV2ViU3RvcmUiXSwibmJmIjoxNzA0NzQ2OTk4LCJleHAiOjE3MDQ4MzMzOTgsImlhdCI6MTcwNDc0Njk5OH0.S_SWcb6awEJEYpIFOP9hdal2kxmaRXmWWHNdKhsJsZk";
         
         var client = new HttpClient();
         var serializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -31,9 +32,10 @@ internal class Program
         var chHelper = new CategoryHierarchyConversionHelper(client, serializerOptions);
         //var chFromIds = await CategoryHierarchyConversionHelper.GetHierarchyFromIds();
 
-        await chHelper.GetDataForConversion();
+       //await chHelper.GetDataForConversion();
+       await chHelper.PerformCategoryIdReplacements();
 
-        //await chHelper.CompareHatchVsIdsCh();
+       //await chHelper.CompareHatchVsIdsCh();
     }
 }
 
@@ -59,5 +61,9 @@ public static class HatchApi
 
     public static async Task<GetProjectsResponse> GetProjects()
         => await _client.GetFromJsonAsync<GetProjectsResponse>($"{_address}/Projects/GetProjectsForProjectList", _so);
+
+    // Upsert Project
+    public static async Task<HttpResponseMessage> UpsertProject(Project project)
+        => await _client.PostAsJsonAsync($"{_address}/Projects/UpsertProject", new UpsertProjectRequest(project), _so);
 }
 
