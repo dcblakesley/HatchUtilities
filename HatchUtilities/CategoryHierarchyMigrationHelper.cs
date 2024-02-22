@@ -1,11 +1,4 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using Hatch.Core.Features.CategoryHierarchy.Models;
-using Hatch.Core.Features.CategoryHierarchy.Services;
-using Hatch.Core.Features.Projects.Models;
-using Hatch.Core.Features.Projects.RequestAndResponse;
-
-namespace HatchUtilities;
+﻿namespace HatchUtilities;
 
 public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializerOptions serializerOptions)
 {

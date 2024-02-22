@@ -1,7 +1,4 @@
-﻿using System.Text.Json;
-using Hatch.Core.Infrastructure.Analytics;
-
-namespace HatchUtilities;
+﻿namespace HatchUtilities;
 
 /// <summary> Usage - Download the json export of UsageAnaytics from Mongo, drop that file into the bin folder of this project, and run this method. </summary>
 public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serializerOptions)

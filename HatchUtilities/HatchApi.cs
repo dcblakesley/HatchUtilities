@@ -1,16 +1,4 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Hatch.Core.Features.AgGridConfigurations.Models;
-using Hatch.Core.Features.AgGridFilterConfigurations.Models;
-using Hatch.Core.Features.AgGridTooltips.Records;
-using Hatch.Core.Features.CategoryHierarchy.Models;
-using Hatch.Core.Features.CategoryHierarchy.Records;
-using Hatch.Core.Features.HatchUsers.Models;
-using Hatch.Core.Features.Projects.Models;
-using Hatch.Core.Features.Projects.RequestAndResponse;
-
-namespace HatchUtilities;
+﻿namespace HatchUtilities;
 
 #pragma warning disable CS8603
 public static class HatchApi

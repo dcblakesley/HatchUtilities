@@ -1,7 +1,4 @@
-﻿using Hatch.Core.Features.CategoryHierarchy.Models;
-using Hatch.Core.Features.CategoryHierarchy.Records;
-
-namespace HatchUtilities;
+﻿namespace HatchUtilities;
 
 #pragma warning disable CS8603
 public class HatchData
