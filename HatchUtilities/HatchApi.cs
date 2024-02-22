@@ -1,4 +1,7 @@
-﻿namespace HatchUtilities;
+﻿using Hatch.Core.Features.AgGridConfigurations.Records;
+using Hatch.Core.Features.AgGridTooltips.Models;
+
+namespace HatchUtilities;
 
 #pragma warning disable CS8603
 public static class HatchApi
@@ -20,9 +23,9 @@ public static class HatchApi
         {
             CategoryHierarchy =
             {
-                GetNormalizedCategoryHierarchy = await CategoryHierarchy.GetNormalizedCategoryHierarchy(),
-                GetAllHierarchies = await CategoryHierarchy.GetAllHierarchies(),
-                GetHierarchiesAndEmployeeData = await CategoryHierarchy.GetHierarchiesAndEmployeeData()
+                GetNormalizedCategoryHierarchy = await CategoryHierarchyApi.GetNormalizedCategoryHierarchy(),
+                GetAllHierarchies = await CategoryHierarchyApi.GetAllHierarchies(),
+                GetHierarchiesAndEmployeeData = await CategoryHierarchyApi.GetHierarchiesAndEmployeeData()
             }
         };
 
@@ -35,12 +38,7 @@ public static class HatchApi
         File.WriteAllText($"hatchData -{datestamp}.json", json);
         return hatchData;
     }
-
-    public static AgGridConfigurationsApi AgGridConfigurations => new();
-    public static HatchUsersApi HatchUsers => new();
-    public static CategoryHierarchyApi CategoryHierarchy => new();
-
-
+    
     public static async Task<NormalizedCategoryHierarchy> GetHatchCh()
         => await Client.GetFromJsonAsync<NormalizedCategoryHierarchy>(
             $"{Address}/CategoryHierarchy/GetNormalizedCategoryHierarchy", So);
@@ -53,51 +51,58 @@ public static class HatchApi
         => await Client.PostAsJsonAsync($"{Address}/Projects/UpsertProject", new UpsertProjectRequest(project), So);
 
 
-    public class AgGridConfigurationsApi()
+    public static class AgGridConfigurationsApi
     {
-        public async Task<AgGridConfiguration> GetAgGridConfigurationById(int id) =>
-            await Client.GetFromJsonAsync<AgGridConfiguration>(
-                $"{Address}/AgGridConfigurations/GetAgGridConfigurationById/{id}", So);
-
-        public async Task<List<AgGridConfiguration>> GetAgGridConfigurations() =>
-            await Client.GetFromJsonAsync<List<AgGridConfiguration>>(
+        public static async Task<List<AgGridConfiguration>> GetAgGridConfigurations()
+        {
+            var response = await Client.GetFromJsonAsync<GetAgGridConfigurationsResponse>(
                 $"{Address}/AgGridConfigurations/GetAgGridConfigurations", So);
-
-        public async Task<HttpResponseMessage> UpsertAgGridConfiguration(AgGridConfiguration agGridConfiguration) =>
-            await Client.PostAsJsonAsync($"{Address}/AgGridConfigurations/UpsertAgGridConfiguration",
-                agGridConfiguration, So);
+            return response!.Configurations;
+        }
+        public static async Task<HttpResponseMessage> UpsertAgGridConfiguration(AgGridConfiguration agGridConfiguration)
+            => await Client.PostAsJsonAsync($"{Address}/AgGridConfigurations/UpsertAgGridConfiguration", agGridConfiguration, So);
+    }
+    public static class AgGridFilterConfigurationsApi
+    {
+        public static async Task<List<AgGridFilterConfiguration>> GetAgGridFilterConfigurations() 
+            => await Client.GetFromJsonAsync<List<AgGridFilterConfiguration>>($"{Address}/AgGridFilterConfigurations/GetAgGridFilterConfigurations", So);
+       
+        public static async Task<HttpResponseMessage> UpsertAgGridFilterConfiguration(AgGridFilterConfiguration agGridFilterConfiguration) 
+            => await Client.PostAsJsonAsync($"{Address}/AgGridFilterConfigurations/UpsertAgGridFilterConfiguration", agGridFilterConfiguration, So);
+    }
+    public static class AgGridTooltipsApi
+    {
+        public static async Task<TooltipConfigurationList> GetAgGridTooltips()
+        {
+            var response = (await Client.GetFromJsonAsync<GetAgGridTooltipsResponse>($"{Address}/AgGridTooltips/GetAgGridTooltips", So));
+            return response!.Tooltips;
+        }
+        public static async Task<HttpResponseMessage> UpsertAgGridTooltip(TooltipConfigurationList tooltipConfigurationList) 
+            => await Client.PostAsJsonAsync($"{Address}/AgGridTooltips/UpsertAgGridTooltip", tooltipConfigurationList, So);
     }
 
-    public class AgGridFilterConfigurationsApi()
+    public static class HatchUsersApi
     {
-    }
-
-    public class AgGridTooltipsApi()
-    {
-    }
-
-    public class HatchUsersApi()
-    {
-        public async Task<List<HatchUser>> GetUsers()
+        public static async Task<List<HatchUser>> GetUsers()
             => await Client.GetFromJsonAsync<List<HatchUser>>($"{Address}/HatchUsers/GetUsers", So);
     }
 
-    public class CategoryHierarchyApi()
+    public static class CategoryHierarchyApi
     {
-        public async Task SyncSourceDataAsync()
+        public static async Task SyncSourceDataAsync()
             => await Client.PostAsync($"{Address}/CategoryHierarchy/SyncSourceData", null);
 
-        public async Task<List<CategoryHierarchyRecord>> GetAllHierarchies()
+        public static async Task<List<CategoryHierarchyRecord>> GetAllHierarchies()
             => await Client.GetFromJsonAsync<List<CategoryHierarchyRecord>>(
                 $"{Address}/CategoryHierarchy/GetAllHierarchies", So);
         
-        public async Task<NormalizedCategoryHierarchy> GetNormalizedCategoryHierarchy(DateTime? lastUpdated = null,
+        public static async Task<NormalizedCategoryHierarchy> GetNormalizedCategoryHierarchy(DateTime? lastUpdated = null,
             bool useClauthEmployeeId = false)
             => await Client.GetFromJsonAsync<NormalizedCategoryHierarchy>(
                 $"{Address}/CategoryHierarchy/GetNormalizedCategoryHierarchy?lastUpdated={lastUpdated}&useClauthEmployeeId={useClauthEmployeeId}",
                 So);
 
-        public async Task<HierarchyAndEmployeeRecord> GetHierarchiesAndEmployeeData()
+        public static async Task<HierarchyAndEmployeeRecord> GetHierarchiesAndEmployeeData()
             => await Client.GetFromJsonAsync<HierarchyAndEmployeeRecord>(
                                $"{Address}/CategoryHierarchy/GetHierarchiesAndEmployeeData", So);
     }

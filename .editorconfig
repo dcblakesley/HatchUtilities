@@ -2,3 +2,6 @@
 
 # IDE0022: Use block body for method
 dotnet_diagnostic.IDE0022.severity = none
+
+# IDE0040: Add accessibility modifiers
+dotnet_style_require_accessibility_modifiers = never

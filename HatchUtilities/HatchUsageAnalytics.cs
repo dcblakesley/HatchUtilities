@@ -15,7 +15,7 @@ public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serial
 
         // Deserialize the file into a list of UserAnalytics
         var analytics = JsonSerializer.Deserialize<List<UserAnalytics>>(analyticsText, serializerOptions);
-        var hatchUsers = await HatchApi.HatchUsers.GetUsers();
+        var hatchUsers = await HatchApi.HatchUsersApi.GetUsers();
         var employeeIds = analytics.Select(x => x.EmployeeId).Distinct().ToList();
 
         // Generate a list of the starting dates for each month going back to 11/1/2023
