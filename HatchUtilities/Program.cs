@@ -49,14 +49,11 @@ internal class Program
         Console.WriteLine($"Time: {sw.ElapsedMilliseconds}");
         sw.Stop();
     }
-
-
 }
 
-    public enum ActionToPerform
-    {
-        GenerateUsageReport,
-        StressTest,
-        GetAllHatchData
-
-    }
+public enum ActionToPerform
+{
+    GenerateUsageReport,
+    StressTest,
+    GetAllHatchData
+}
