@@ -1,13 +1,2 @@
-* Map from HatchCH to IDS CH
-  - Automap
-  - Manual Map
-  - defaults
-
-Get all projects
-Upsert each Project with the new IDs
-
-
-
-
-
+Get all Hatch Data
 

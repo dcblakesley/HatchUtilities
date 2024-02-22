@@ -11,17 +11,17 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 {
     public static async Task<NormalizedCategoryHierarchy> GetHierarchyFromIds()
     {
-        // Category Hierarchy (IDS Categories): https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-hierarchy
-        // Category Details: https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-details
+        // https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-hierarchy
+        // https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-details
 
         var idsAddress = "https://idspurchasingapi.clarkinc.biz/categoryhierarchy";
 
         var client = new HttpClient();
         var so = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
+        Console.WriteLine($"{idsAddress}/get-category-hierarchy");
+        var idsCategories = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>($"https://idspurchasingapi.clarkinc.biz/categoryhierarchy/get-category-hierarchy", so);
         Console.WriteLine($"{idsAddress}/get-category-details");
         var idsHierarchy = await client.GetFromJsonAsync<IdsGetCategoryDetailsResponse>($"{idsAddress}/get-category-details", so);
-        Console.WriteLine($"{idsAddress}/get-category-hierarchy");
-        var idsCategories = await client.GetFromJsonAsync<IdsGetCategoryHierarchyResponse>($"{idsAddress}/get-category-hierarchy", so);
         Console.WriteLine($"ids downloads complete");
 
         var ch = idsHierarchy.Result.ToCategoryHierarchy(idsCategories.Result.CategoryHierarchies);
@@ -106,6 +106,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 
         // Export the results to Excel
         var builder = new WorkbookBuilder();
+
         builder.AddSheet("Major Categories", columnsMajorCategories, true, true);
         builder.AddSheet("IDS Categories", columnsIdsCategories, true, true);
         builder.Save("CH Comparison.xlsx");
@@ -121,7 +122,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         Console.WriteLine("Getting all projects...");
         var allProjects = await HatchApi.GetProjects();
 
-        // Hatch Category Hierarchy
+        //// Hatch Category Hierarchy
         Console.WriteLine("Getting Hatch Category Hierarchy...");
         var hatchCategoryHierarchy = await HatchApi.GetHatchCh();
 
@@ -131,10 +132,10 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         if (!Directory.Exists(dataFolder))
             Directory.CreateDirectory(dataFolder);
         
-        // Create a file for the Hatch Category Hierarchy
+        //// Create a file for the Hatch Category Hierarchy
         File.WriteAllText(Path.Combine(dataFolder, "Hatch Category Hierarchy.json"), JsonSerializer.Serialize(hatchCategoryHierarchy));
 
-        // Create a file for the IDS Category Hierarchy
+        //// Create a file for the IDS Category Hierarchy
         File.WriteAllText(Path.Combine(dataFolder, "IDS Category Hierarchy.json"), JsonSerializer.Serialize(idsCategoryHierarchy));
         
         // Create a subfolder for projects
@@ -188,6 +189,7 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
         {
             try
             {
+                Console.WriteLine($"Processing {projectFile}...");
                 var project = JsonSerializer.Deserialize<Project>(File.ReadAllText(projectFile));
 
                 // Major Category
@@ -196,8 +198,9 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
                 var majorCategory = hatchCategoryHierarchy.MajorCategories.FirstOrDefault(x => x.Id == majorCategoryId);
                 if (majorCategory == null)
                 {
-                    Console.WriteLine($"Major Category not found: {majorCategoryId}");
-                    continue;
+                    //Console.WriteLine($"Major Category Id not found: {majorCategoryId}");
+                    majorCategory = hatchCategoryHierarchy.MajorCategories.First();
+                    //continue;
                 }
                 var majorCategoryName = majorCategory.Name;
                 // Check if the Major Category is in the replacements list
@@ -213,11 +216,12 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
                 }
                 
                 // Set the new Major Category Id
+                var oldMajorCategoryId = project.MajorCategoryId;
                 project.MajorCategoryId = idsMajorCategory.Id;
 
                 // IDS Categories
                 var idsCategoryIds = project.IdsCategoryIds;
-
+                
                 // Check if the IDS Categories are in the replacements list
                 var newIdsCategoryIds = new List<int>();
                 foreach (var idsCategoryId in idsCategoryIds)
@@ -237,9 +241,12 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
                     newIdsCategoryIds.Add(idsCategory.Id);
                 }
 
+                var oldIdsCategoryIds = project.IdsCategoryIds.ToList();
+                project.IdsCategoryIds = newIdsCategoryIds;
+
                 // Upsert the project
-                //var response = await HatchApi.UpsertProject(project);
-                //response.EnsureSuccessStatusCode();
+                var response = await HatchApi.UpsertProject(project);
+                response.EnsureSuccessStatusCode();
 
                 // Move the project file to the completed folder
                 var fileName = Path.GetFileName(projectFile);
@@ -255,8 +262,8 @@ public class CategoryHierarchyConversionHelper(HttpClient client, JsonSerializer
 
 
     // DTOs only accessible in this class.
-    record IdsGetCategoryHierarchyResult(List<IdsCategoryDto>? CategoryHierarchies);
     record IdsGetCategoryHierarchyResponse(IdsGetCategoryHierarchyResult? Result);
+    record IdsGetCategoryHierarchyResult(List<IdsCategoryDto>? CategoryHierarchies);
     record IdsGetCategoryDetailsResponse(IdsGetCategoryDetailsResult? Result);
     record IdsCategoryDto(
         int ItemCategoryId,
