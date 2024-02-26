@@ -1,7 +1,4 @@
-﻿using Hatch.Core.Features.AgGridConfigurations.Records;
-using Hatch.Core.Features.AgGridTooltips.Models;
-
-namespace HatchUtilities;
+﻿namespace HatchUtilities;
 
 #pragma warning disable CS8603
 public static class HatchApi
@@ -21,12 +18,14 @@ public static class HatchApi
     {
         var hatchData = new HatchData
         {
-            CategoryHierarchy =
-            {
-                GetNormalizedCategoryHierarchy = await CategoryHierarchyApi.GetNormalizedCategoryHierarchy(),
-                GetAllHierarchies = await CategoryHierarchyApi.GetAllHierarchies(),
-                GetHierarchiesAndEmployeeData = await CategoryHierarchyApi.GetHierarchiesAndEmployeeData()
-            }
+            AgGridConfigurations = await AgGridConfigurationsApi.GetAgGridConfigurations(),
+            AgGridFilterConfigurations = await AgGridFilterConfigurationsApi.GetAgGridFilterConfigurations(),
+            AgGridTooltipConfigurations = (await AgGridTooltipsApi.GetAgGridTooltips()).TooltipConfigurations,
+            GetNormalizedCategoryHierarchy = await CategoryHierarchyApi.GetNormalizedCategoryHierarchy(),
+            GetAllHierarchies = await CategoryHierarchyApi.GetAllHierarchies(),
+            //GetHierarchiesAndEmployeeData = await CategoryHierarchyApi.GetHierarchiesAndEmployeeData()
+
+
         };
 
         // Save the file
@@ -65,7 +64,7 @@ public static class HatchApi
     public static class AgGridFilterConfigurationsApi
     {
         public static async Task<List<AgGridFilterConfiguration>> GetAgGridFilterConfigurations() 
-            => await Client.GetFromJsonAsync<List<AgGridFilterConfiguration>>($"{Address}/AgGridFilterConfigurations/GetAgGridFilterConfigurations", So);
+            => (await Client.GetFromJsonAsync<GetAgGridFilterConfigurationsResponse>($"{Address}/AgGridFilterConfigurations/GetAgGridFilterConfigurations", So))!.Configurations;
        
         public static async Task<HttpResponseMessage> UpsertAgGridFilterConfiguration(AgGridFilterConfiguration agGridFilterConfiguration) 
             => await Client.PostAsJsonAsync($"{Address}/AgGridFilterConfigurations/UpsertAgGridFilterConfiguration", agGridFilterConfiguration, So);
@@ -77,9 +76,26 @@ public static class HatchApi
             var response = (await Client.GetFromJsonAsync<GetAgGridTooltipsResponse>($"{Address}/AgGridTooltips/GetAgGridTooltips", So));
             return response!.Tooltips;
         }
-        public static async Task<HttpResponseMessage> UpsertAgGridTooltip(TooltipConfigurationList tooltipConfigurationList) 
-            => await Client.PostAsJsonAsync($"{Address}/AgGridTooltips/UpsertAgGridTooltip", tooltipConfigurationList, So);
+        public static async Task<HttpResponseMessage> UpsertAgGridTooltip(List<TooltipConfiguration> tooltipConfigurations) 
+            => await Client.PostAsJsonAsync($"{Address}/AgGridTooltips/UpsertAgGridTooltip", new TooltipConfigurationList {TooltipConfigurations = tooltipConfigurations }, So);
     }
+    public static class CategoryHierarchyApi
+    {
+        public static async Task<List<CategoryHierarchyRecord>> GetAllHierarchies()
+            => await Client.GetFromJsonAsync<List<CategoryHierarchyRecord>>($"{Address}/CategoryHierarchy/GetAllHierarchies", So);
+        
+        public static async Task<NormalizedCategoryHierarchy> GetNormalizedCategoryHierarchy(DateTime? lastUpdated = null, bool useClauthEmployeeId = false)
+            => await Client.GetFromJsonAsync<NormalizedCategoryHierarchy>($"{Address}/CategoryHierarchy/GetNormalizedCategoryHierarchy?lastUpdated={lastUpdated}&useClauthEmployeeId={useClauthEmployeeId}", So);
+
+        public static async Task<HierarchyAndEmployeeRecord> GetHierarchiesAndEmployeeData()
+            => await Client.GetFromJsonAsync<HierarchyAndEmployeeRecord>($"{Address}/CategoryHierarchy/GetHierarchiesAndEmployeeData", So);
+    }
+    public static class CommentsApi
+    {
+        public static async Task<List<Comment>> GetComments()
+            => await Client.GetFromJsonAsync<List<Comment>>($"{Address}/Comments/GetComments", So);
+    }
+
 
     public static class HatchUsersApi
     {
@@ -87,24 +103,12 @@ public static class HatchApi
             => await Client.GetFromJsonAsync<List<HatchUser>>($"{Address}/HatchUsers/GetUsers", So);
     }
 
-    public static class CategoryHierarchyApi
+
+    public static class ProjectsApi
     {
-        public static async Task SyncSourceDataAsync()
-            => await Client.PostAsync($"{Address}/CategoryHierarchy/SyncSourceData", null);
-
-        public static async Task<List<CategoryHierarchyRecord>> GetAllHierarchies()
-            => await Client.GetFromJsonAsync<List<CategoryHierarchyRecord>>(
-                $"{Address}/CategoryHierarchy/GetAllHierarchies", So);
-        
-        public static async Task<NormalizedCategoryHierarchy> GetNormalizedCategoryHierarchy(DateTime? lastUpdated = null,
-            bool useClauthEmployeeId = false)
-            => await Client.GetFromJsonAsync<NormalizedCategoryHierarchy>(
-                $"{Address}/CategoryHierarchy/GetNormalizedCategoryHierarchy?lastUpdated={lastUpdated}&useClauthEmployeeId={useClauthEmployeeId}",
-                So);
-
-        public static async Task<HierarchyAndEmployeeRecord> GetHierarchiesAndEmployeeData()
-            => await Client.GetFromJsonAsync<HierarchyAndEmployeeRecord>(
-                               $"{Address}/CategoryHierarchy/GetHierarchiesAndEmployeeData", So);
+        public static async Task<List<Project>> GetProjects()
+            => (await Client.GetFromJsonAsync<GetProjectsResponse>($"{Address}/Projects/GetProjectsForProjectList", So))!.Projects.ToList();
+            
     }
 
 }

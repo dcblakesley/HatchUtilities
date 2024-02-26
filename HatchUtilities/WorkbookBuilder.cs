@@ -3,7 +3,7 @@
 public class WorkbookBuilder
 {
     WorkBook? _workBook;
-    private static List<string>? _columnLetters;
+    static List<string>? _columnLetters;
 
     // Public Methods
     public void CreateWorkbook() => _workBook = new WorkBook(ExcelFileFormat.XLSX);
@@ -31,14 +31,15 @@ public class WorkbookBuilder
         => AddSheet(name, StringsToObjects(rowsOrColumns), autosize, transpose);
 
     // Private Methods
-    private static void AutoSizeAllColumns(WorkSheet workSheet)
+    static void AutoSizeAllColumns(WorkSheet workSheet)
     {
         foreach (var column in workSheet.Columns)
         {
             column.AutoSizeColumn();
         }
     }
-    private static List<List<object>> StringsToObjects(List<List<string>> stringLists)
+
+    static List<List<object>> StringsToObjects(List<List<string>> stringLists)
     {
         var objectLists = new List<List<object>>();
         foreach (var column in stringLists)
@@ -48,7 +49,8 @@ public class WorkbookBuilder
 
         return objectLists;
     }
-    private static List<string> GetColumnLetters()
+
+    static List<string> GetColumnLetters()
     {
         if (_columnLetters != null)
         {
@@ -87,7 +89,7 @@ public class WorkbookBuilder
     }
 
     /// <summary> Send in a list of Rows </summary>
-    private WorkSheet AddSheetByRows(string name, List<List<object>> rows)
+    WorkSheet AddSheetByRows(string name, List<List<object>> rows)
     {
         var columnLetters = GetColumnLetters();
         var workSheet = _workBook.CreateWorkSheet(name);
@@ -108,7 +110,7 @@ public class WorkbookBuilder
     }
 
     /// <summary> Send in a list of Columns </summary>
-    private WorkSheet AddSheetByColumns(string name, List<List<object>> columns)
+    WorkSheet AddSheetByColumns(string name, List<List<object>> columns)
     {
         var columnLetters = GetColumnLetters();
         var workSheet = _workBook.CreateWorkSheet(name);
