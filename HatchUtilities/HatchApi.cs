@@ -1,4 +1,6 @@
-﻿namespace HatchUtilities;
+﻿using Hatch.Core.Features.Content.RequestAndResponse;
+
+namespace HatchUtilities;
 
 #pragma warning disable CS8603
 public static class HatchApi
@@ -16,17 +18,20 @@ public static class HatchApi
 
     public static async Task<HatchData> GetAllHatchData()
     {
+
         var hatchData = new HatchData
         {
+            // 
             AgGridConfigurations = await AgGridConfigurationsApi.GetAgGridConfigurations(),
             AgGridFilterConfigurations = await AgGridFilterConfigurationsApi.GetAgGridFilterConfigurations(),
             AgGridTooltipConfigurations = (await AgGridTooltipsApi.GetAgGridTooltips()).TooltipConfigurations,
             GetNormalizedCategoryHierarchy = await CategoryHierarchyApi.GetNormalizedCategoryHierarchy(),
             GetAllHierarchies = await CategoryHierarchyApi.GetAllHierarchies(),
             //GetHierarchiesAndEmployeeData = await CategoryHierarchyApi.GetHierarchiesAndEmployeeData()
-
-
+            //Comments = await CommentsApi.GetComments()
         };
+
+
 
         // Save the file
         var serializerOptions = new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault};
@@ -92,7 +97,7 @@ public static class HatchApi
     }
     public static class CommentsApi
     {
-        public static async Task<List<Comment>> GetComments()
+        public static async Task<List<Comment>> GetComments(int projectId)
             => await Client.GetFromJsonAsync<List<Comment>>($"{Address}/Comments/GetComments", So);
     }
 
@@ -109,6 +114,18 @@ public static class HatchApi
         public static async Task<List<Project>> GetProjects()
             => (await Client.GetFromJsonAsync<GetProjectsResponse>($"{Address}/Projects/GetProjectsForProjectList", So))!.Projects.ToList();
             
+    }
+
+    public static class ContentApi
+    {
+        // GetItemsReadyForContent
+        public static async Task<GetItemsReadyForContentResponse> GetItemsReadyForContent()
+            => await Client.GetFromJsonAsync<GetItemsReadyForContentResponse>($"{Address}/Content/GetItemsReadyForContent", So);
+
+        // GetAllItemDetailsForProject
+        public static async Task<GetAllItemDetailsForProjectResponse> GetAllItemDetailsForProject(GetAllItemDetailsForProjectRequest request)
+            => await Client.GetFromJsonAsync<GetAllItemDetailsForProjectResponse>($"{Address}/Content/GetAllItemDetailsForProject?projectId={request.ProjectId}", So);
+
     }
 
 }

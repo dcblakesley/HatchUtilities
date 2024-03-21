@@ -64,6 +64,6 @@ public class HatchUsageAnalytics(HttpClient client, JsonSerializerOptions serial
         }
 
         // Write the output to a file named EmployeeUsage.csv
-        File.WriteAllText("Hatch usage report.csv", output);
+        File.WriteAllText($"Hatch usage report - {DateTime.Today.Month}-{DateTime.Today.Day}-{DateTime.Today.Year}.csv", output);
     }
 }

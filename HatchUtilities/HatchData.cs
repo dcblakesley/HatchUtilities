@@ -1,7 +1,8 @@
 ﻿namespace HatchUtilities;
 
-#pragma warning disable CS8603
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8603  
+#pragma warning disable CS8618
+
 public class HatchData
 {
     // AG Grid
@@ -18,3 +19,4 @@ public class HatchData
     public List<Comment> Comments { get; set; }
 
 }
+

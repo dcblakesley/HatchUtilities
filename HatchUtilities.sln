@@ -10,6 +10,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hatch.Web", "..\Hatch\src\Hatch.Web\Hatch.Web.csproj", "{97356469-4B19-4180-82EB-C088F9AF434C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hatch.Core", "..\Hatch\src\Hatch.Core\Hatch.Core.csproj", "{325B2485-3B59-43D2-AE6B-A8CED857C500}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +24,14 @@ Global
 		{3CF2B239-13BF-4686-B6C6-7346E5448CC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3CF2B239-13BF-4686-B6C6-7346E5448CC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3CF2B239-13BF-4686-B6C6-7346E5448CC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97356469-4B19-4180-82EB-C088F9AF434C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97356469-4B19-4180-82EB-C088F9AF434C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97356469-4B19-4180-82EB-C088F9AF434C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97356469-4B19-4180-82EB-C088F9AF434C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{325B2485-3B59-43D2-AE6B-A8CED857C500}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{325B2485-3B59-43D2-AE6B-A8CED857C500}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{325B2485-3B59-43D2-AE6B-A8CED857C500}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{325B2485-3B59-43D2-AE6B-A8CED857C500}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

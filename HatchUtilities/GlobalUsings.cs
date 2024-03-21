@@ -15,7 +15,6 @@ global using Hatch.Core.Features.CategoryHierarchy.Records;
 global using Hatch.Core.Features.CategoryHierarchy.Services;
 global using Hatch.Core.Features.Comments.Models;
 global using Hatch.Core.Features.HatchUsers.Models;
-global using Hatch.Core.Features.ItemWorkbook.Records;
 global using Hatch.Core.Features.Projects.Models;
 global using Hatch.Core.Features.Projects.RequestAndResponse;
 global using Hatch.Core.Infrastructure.Analytics;

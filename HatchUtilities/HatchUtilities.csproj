@@ -8,16 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IronXL.Excel" Version="2023.12.19" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Hatch.Core">
-      <HintPath>..\..\Hatch\src\Hatch.Core\bin\Debug\net6.0\Hatch.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Hatch.Web">
-      <HintPath>..\..\Hatch\bin\Debug\Hatch.Web.dll</HintPath>
-    </Reference>
+    <PackageReference Include="IronXL.Excel" Version="2024.3.20" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +17,11 @@
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hatch\src\Hatch.Core\Hatch.Core.csproj" />
+    <ProjectReference Include="..\..\Hatch\src\Hatch.Web\Hatch.Web.csproj" />
   </ItemGroup>
 
 </Project>
