@@ -83,7 +83,7 @@ class Program
 
             foreach (var z in k)
             {
-                output.Add($"{id},{z.ItemNumber},{z.ValidationMessages?.First()},{z.Barcode}");
+               // output.Add($"{id},{z.ItemNumber},{z.ValidationMessages?.First()},{z.Barcode}");
             }
         }
         await File.WriteAllLinesAsync("Content Validation 3-6-24.csv", output);

@@ -1,4 +1,6 @@
-﻿namespace HatchUtilities;
+﻿using Hatch.Core.Features.CategoryHierarchy.RequestsAndResponses;
+
+namespace HatchUtilities;
 
 #pragma warning disable CS8603  
 #pragma warning disable CS8618
@@ -19,4 +21,3 @@ public class HatchData
     public List<Comment> Comments { get; set; }
 
 }
-

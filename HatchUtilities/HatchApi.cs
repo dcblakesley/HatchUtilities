@@ -1,4 +1,9 @@
-﻿using Hatch.Core.Features.Content.RequestAndResponse;
+﻿using Hatch.Core.Features.AgGridConfigurations.RequestsAndResponses;
+using Hatch.Core.Features.AgGridFilterConfigurations.RequestsAndResponses;
+using Hatch.Core.Features.AgGridTooltips.RequestsAndResponses;
+using Hatch.Core.Features.CategoryHierarchy.RequestsAndResponses;
+using Hatch.Core.Features.Content.RequestsAndResponses;
+using Hatch.Core.Features.Projects.RequestsAndResponses;
 
 namespace HatchUtilities;
 
@@ -129,3 +134,4 @@ public static class HatchApi
     }
 
 }
+
